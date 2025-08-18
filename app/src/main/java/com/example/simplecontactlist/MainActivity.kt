@@ -1,6 +1,7 @@
 package com.example.simplecontactlist
 
 import android.annotation.SuppressLint
+import android.app.Instrumentation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -40,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
@@ -51,6 +53,7 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val context = this.applicationContext
         // enableEdgeToEdge()
         setContent {
             SimpleContactListTheme {
@@ -71,6 +74,7 @@ fun MainScreen() {
 
 @Composable
 fun ContactsList() {
+    // Тут явно должны быть не строки. Либо эти строки должны как-то по-другому применяться.
     val listItems = remember { mutableStateListOf("Text1", "Text2", "Text3") }
 
     Column(
@@ -102,6 +106,7 @@ fun ContactsList() {
                             .size(40.dp)
                             .clip(CircleShape)
                     )
+                    Spacer(modifier = Modifier.width(10.dp))
                     OutlinedTextField(
                         value = item,
                         onValueChange = {},
@@ -110,7 +115,7 @@ fun ContactsList() {
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Button(
-                        onClick = {},
+                        onClick = {  },
                         modifier = Modifier,
                         shape =  MaterialTheme.shapes.extraSmall,
                         contentPadding = PaddingValues(
@@ -121,7 +126,7 @@ fun ContactsList() {
                         )
 
                     ) {
-                        Text("Delete")
+                        Text(stringResource(R.string.delete_button_text))
                     }
                 }
             }
@@ -142,7 +147,7 @@ fun AddContactButton() {
     Button(
         onClick = { state.value = true }
     ) {
-        Text("Add Contact")
+        Text(stringResource(R.string.add_contact_button_text))
     }
 }
 
