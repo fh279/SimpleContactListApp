@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,19 +12,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,12 +31,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,10 +44,13 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // enableEdgeToEdge()
+        // enableEdgeToEdge() - зачем вообще эта функция? fullscreen?
         setContent {
             SimpleContactListTheme {
-                Scaffold(modifier = Modifier.fillMaxSize() ) {/* innerPadding ->*/
+                Scaffold(modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding()
+                ) {/* innerPadding ->*/
                     MainScreen()
                     // Почему если оформить кнопку в отдельную Compose функцию, то она появляется не под списком, а в самом верху? Можно ли добиться такого что бы элементы экрана были в отдельных композициях, но располагались в порядке вызова функций?
                     // AddContactButton()
@@ -69,36 +67,26 @@ fun MainScreen() {
 
 @Composable
 fun ContactsList() {
-    // Тут явно должны быть не строки. Либо эти строки должны как-то по-другому применяться.
-    val listItems = remember { mutableStateListOf("Text1", "Text2", "Text3") }
+    // А как обрабатывать смену состояния? Типа, экран перевернул?
+    // не обязательно юзать mutableStateListOf. попробуй metableStateOf а внутри лист строк.
+    val listItems = remember { mutableStateListOf<String>()}
     var text by remember { mutableStateOf("") }
+    // val insets = rememberKeyboardInsets() - что это за дичь из нейросетей?
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .wrapContentSize(align = Alignment.Center)
-        ,
-        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         LazyColumn(
             contentPadding = PaddingValues(all = 0.dp),
-            modifier = Modifier.border(
-                width = 1.dp,
-                brush = Brush.sweepGradient(
-                    Pair(1f, Color.Black),
-                    Pair(2f, Color.Black)
-                ),
-                shape = RoundedCornerShape(8.dp)
-            )
+            modifier = Modifier.height(350.dp)
 
         ) {
+            if (listItems.isNotEmpty()) {
             items(listItems) { item ->
-                if (listItems.isNotEmpty()) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(start = 50.dp, end = 50.dp)
+                    horizontalArrangement = Arrangement.Absolute.Left,
+                    modifier = Modifier.padding(start = 12.dp, end = 12.dp).fillMaxWidth()
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_launcher_background),
@@ -107,22 +95,12 @@ fun ContactsList() {
                             .size(40.dp)
                             .clip(CircleShape)
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
-
+                    Spacer(modifier = Modifier.width(100.dp))
                     Text(
                         text = item,
-                        modifier = Modifier.border(
-                            width = 2.dp,
-                            brush = Brush.sweepGradient(
-                                colors = arrayListOf(
-                                    Color.Blue,
-                                    Color.Black
-                                )
-                            ),
-                            shape = Shapes().extraSmall
-                        )
+                        modifier = Modifier.width(200.dp)
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.weight(1f))
                     Button(
                         onClick = { listItems.remove(item) },
                         modifier = Modifier,
@@ -133,54 +111,51 @@ fun ContactsList() {
                             end = 2.dp,
                             bottom = 2.dp
                         )
-
                     ) {
                         Text(stringResource(R.string.delete_button_text))
                     }
                 }
                 }
-                else {
-                        Text("Ты чо, сыч, что ли?..")
-                }
+
             }
+            // Такой вариант - очень плохой, кмк. Как это обойти? Проблема с композабл скоупом.
+            // Вопрос: можно ли менять параметры модифаера композ функции на ходу, вне модифаера? Например, хочу что б в if был lazy column в рамке, а в else - без рамки.
+            else {
+                // Items использован что бы задать composable скоуп и иметь возможность добавить изображение emptyState'а.
+                items(arrayListOf("")) {
+                    Column {
+                        Image(painter = painterResource(id = R.drawable.emptystate2),
+                            contentDescription = "EmptyState",
+                            modifier = Modifier
+                                .size(170.dp)
+                                .clip(CircleShape)
+                        )
+                        Text(
+                            text = "Тут еще ничего нет.",
+                            modifier = Modifier.align(alignment = Alignment.CenterHorizontally))
+                    }
+
+                }
+            // Вот эта шляпа почему то не работает
+            // Row { Text("Ты чо, сыч, что ли?..") }
+
         }
-        AddContactButton(
-            list = listItems,
-            name = text)
+        }
 
         OutlinedTextField(
             value = text,
             onValueChange = { newText -> text = newText },
             modifier = Modifier
-                .padding(start = 10.dp, end = 10.dp)
+                .padding(start = 10.dp, end = 10.dp, top = 50.dp)
                 .width(200.dp)
                 .align(Alignment.CenterHorizontally)
                 .fillMaxWidth(),
-            label = {Text("Введите имя")}
-
+            label = { Text("Введите имя") }
         )
-    }
-}
-
-// Put OutlinedTextField here if possible.
-@Composable
-fun UserNameField() {
-
-}
-
-@Composable
-fun AddContactButton(
-    list: SnapshotStateList<String>,
-    name: String) {
-    val state = remember { mutableStateOf(false) }
-    Button(
-        modifier = Modifier.padding(top = 100.dp),
-        onClick = {
-            state.value = true
-            list.add(name)
-        }
-    ) {
-        Text(stringResource(R.string.add_contact_button_text))
+        Button(
+            modifier = Modifier.padding(top = 0.dp),
+            onClick = { listItems.add(text) }
+        ) { Text(stringResource(R.string.add_contact_button_text)) }
     }
 }
 
@@ -194,4 +169,3 @@ fun ContactList() {
         }
     }
 }
-
