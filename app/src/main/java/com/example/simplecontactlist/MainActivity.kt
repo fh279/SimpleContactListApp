@@ -20,7 +20,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -65,12 +68,14 @@ fun MainScreen() {
     ContactsList()
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactsList() {
     // А как обрабатывать смену состояния? Типа, экран перевернул?
     // не обязательно юзать mutableStateListOf. попробуй metableStateOf а внутри лист строк.
     val listItems = remember { mutableStateListOf<String>()}
     var text by remember { mutableStateOf("") }
+    var isDialogMustBeShown by remember { mutableStateOf(false) }
     // val insets = rememberKeyboardInsets() - что это за дичь из нейросетей?
 
     Column(
@@ -86,7 +91,9 @@ fun ContactsList() {
             items(listItems) { item ->
                 Row(
                     horizontalArrangement = Arrangement.Absolute.Left,
-                    modifier = Modifier.padding(start = 12.dp, end = 12.dp).fillMaxWidth()
+                    modifier = Modifier
+                        .padding(start = 12.dp, end = 12.dp)
+                        .fillMaxWidth()
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_launcher_background),
@@ -150,12 +157,37 @@ fun ContactsList() {
                 .width(200.dp)
                 .align(Alignment.CenterHorizontally)
                 .fillMaxWidth(),
-            label = { Text("Введите имя") }
+            label = { Text(stringResource(R.string.Add_contact_text_field_label)) }
         )
         Button(
             modifier = Modifier.padding(top = 0.dp),
-            onClick = { listItems.add(text) }
+            onClick = {
+                if (text.isNotBlank()) {
+                    listItems.add(text)
+                    text = ""
+                } else {
+                    isDialogMustBeShown = true
+                }
+                 }
         ) { Text(stringResource(R.string.add_contact_button_text)) }
+
+        if (isDialogMustBeShown) {
+            AlertDialog(
+            title = { Text("Пустое поле ввода.\nЗабыл ввести имя?") },
+            onDismissRequest = {},
+            confirmButton = {
+                Button(
+                    onClick = { isDialogMustBeShown = false },
+                    content = { Text("Ща введу") }
+            ) },
+            )
+            /*BasicAlertDialog(
+                onDismissRequest = {
+                    isDialogMustBeShown = false
+                },
+                content = { Text("Ну, диалог..") }
+            )*/
+        }
     }
 }
 
