@@ -21,9 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -68,7 +66,6 @@ fun MainScreen() {
     ContactsList()
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactsList() {
     // А как обрабатывать смену состояния? Типа, экран перевернул?
@@ -122,8 +119,7 @@ fun ContactsList() {
                         Text(stringResource(R.string.delete_button_text))
                     }
                 }
-                }
-
+            }
             }
             // Такой вариант - очень плохой, кмк. Как это обойти? Проблема с композабл скоупом.
             // Вопрос: можно ли менять параметры модифаера композ функции на ходу, вне модифаера? Например, хочу что б в if был lazy column в рамке, а в else - без рамки.
@@ -141,12 +137,8 @@ fun ContactsList() {
                             text = "Тут еще ничего нет.",
                             modifier = Modifier.align(alignment = Alignment.CenterHorizontally))
                     }
-
                 }
-            // Вот эта шляпа почему то не работает
-            // Row { Text("Ты чо, сыч, что ли?..") }
-
-        }
+            }
         }
 
         OutlinedTextField(
@@ -168,25 +160,20 @@ fun ContactsList() {
                 } else {
                     isDialogMustBeShown = true
                 }
-                 }
+            }
         ) { Text(stringResource(R.string.add_contact_button_text)) }
 
         if (isDialogMustBeShown) {
             AlertDialog(
-            title = { Text("Пустое поле ввода.\nЗабыл ввести имя?") },
-            onDismissRequest = {},
-            confirmButton = {
-                Button(
-                    onClick = { isDialogMustBeShown = false },
-                    content = { Text("Ща введу") }
-            ) },
-            )
-            /*BasicAlertDialog(
-                onDismissRequest = {
-                    isDialogMustBeShown = false
+                title = { Text("Пустое поле ввода.\nЗабыл ввести имя?") },
+                onDismissRequest = {},
+                confirmButton = {
+                    Button(
+                        onClick = { isDialogMustBeShown = false },
+                        content = { Text("Ща введу") }
+                    )
                 },
-                content = { Text("Ну, диалог..") }
-            )*/
+            )
         }
     }
 }
