@@ -4,4 +4,5 @@
     <string name="add_contact_button_text">Add Contact</string>
     <string name="Add_contact_text_field_label">Введите имя</string>
     <string name="empty_text_field_toast_text">Field is empty!</string>
+    <string name="empty_state_text">Тут еще ничего нет.</string>
 </resources>
