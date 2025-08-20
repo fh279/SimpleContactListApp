@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,8 +44,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.simplecontactlist.ui.theme.SimpleContactListTheme
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
+    // Такое решение сомнительно.
+    val randomColor: Float
+        get() = Random.nextFloat()
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,7 +94,25 @@ class MainActivity : ComponentActivity() {
 
             ) {
                 if (listItems.isNotEmpty()) {
-                    items(listItems) { item ->
+                    items(listItems,
+                        // Вот это могло бы быть полезно если бы я динамически менял порядок элементов. Однако это не работало бы если имеются одинаковые имена. В идеале для идентификации каждого отдельного элемента следует заводит ьайдишники.
+                        key = { it }
+                    ) { item ->
+                        val (color1, color2) = remember {
+                            Pair(
+                                Color(
+                                    red = randomColor,
+                                    green = randomColor,
+                                    blue = randomColor
+                                ),
+                                Color(
+                                    red = randomColor,
+                                    green = randomColor,
+                                    blue = randomColor
+                                )
+                            )
+                        }
+
                         Row(
                             horizontalArrangement = Arrangement.Absolute.Left,
                             modifier = Modifier
@@ -103,12 +126,18 @@ class MainActivity : ComponentActivity() {
                                     .background(
                                         brush = Brush.radialGradient(
                                             colors = listOf(
-                                                Color.Red,
-                                                Color.Blue
+                                                color1,
+                                                color2
                                             )
                                         )
                                     )
-                            )
+                            ) {
+                                Text(
+                                    text = item.getOrNull(0).toString() ?: "",
+                                    color = Color.White,
+                                    modifier = Modifier.align(alignment = Alignment.Center)
+                                )
+                            }
                             Spacer(modifier = Modifier.width(100.dp))
                             Text(
                                 text = item,
@@ -198,7 +227,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-
-
-
