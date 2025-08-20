@@ -5,5 +5,5 @@
     <string name="Add_contact_text_field_label">Enter contact name</string>
     <string name="empty_text_field_toast_text">Field is empty</string>
     <string name="empty_state_text">There is nothing here yet</string>
-    <string name="emty_name_field_error">Field is empty. Enter the name</string>
+    <string name="emty_name_field_error">Field is empty. Enter name</string>
 </resources>
