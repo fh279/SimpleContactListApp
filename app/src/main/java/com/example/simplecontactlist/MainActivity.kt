@@ -5,7 +5,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -35,6 +37,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -92,12 +96,18 @@ fun ContactsList() {
                         .padding(start = 12.dp, end = 12.dp)
                         .fillMaxWidth()
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_launcher_background),
-                        contentDescription = "Аватар пользователя",
+                    Box(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
+                            .background(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        Color.Red,
+                                        Color.Blue
+                                    )
+                                )
+                            )
                     )
                     Spacer(modifier = Modifier.width(100.dp))
                     Text(
@@ -134,7 +144,7 @@ fun ContactsList() {
                                 .clip(CircleShape)
                         )
                         Text(
-                            text = "Тут еще ничего нет.",
+                            text = stringResource(R.string.empty_state_text),
                             modifier = Modifier.align(alignment = Alignment.CenterHorizontally))
                     }
                 }
