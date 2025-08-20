@@ -29,6 +29,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.currentCompositionLocalContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -43,12 +44,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.getString
 import com.example.simplecontactlist.ui.theme.SimpleContactListTheme
 
 class MainActivity : ComponentActivity() {
+
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         // enableEdgeToEdge() - зачем вообще эта функция? fullscreen?
         setContent {
             SimpleContactListTheme {
@@ -76,7 +80,7 @@ fun ContactsList() {
     // не обязательно юзать mutableStateListOf. попробуй metableStateOf а внутри лист строк.
     val listItems = remember { mutableStateListOf<String>()}
     var text by remember { mutableStateOf("") }
-    var isDialogMustBeShown by remember { mutableStateOf(false) }
+    var errorText by remember { mutableStateOf("") }
     // val insets = rememberKeyboardInsets() - что это за дичь из нейросетей?
 
     Column(
@@ -153,13 +157,24 @@ fun ContactsList() {
 
         OutlinedTextField(
             value = text,
-            onValueChange = { newText -> text = newText },
+            onValueChange = {
+                newText -> text = newText
+                errorText = ""
+            },
             modifier = Modifier
                 .padding(start = 10.dp, end = 10.dp, top = 50.dp)
                 .width(200.dp)
                 .align(Alignment.CenterHorizontally)
                 .fillMaxWidth(),
-            label = { Text(stringResource(R.string.Add_contact_text_field_label)) }
+            label = { Text(stringResource(R.string.Add_contact_text_field_label)) },
+            supportingText = {
+                if (errorText.isNotEmpty()) {
+                    Text(
+                        text = errorText,
+                        color = Color.Red
+                    )
+                }
+            }
         )
         Button(
             modifier = Modifier.padding(top = 0.dp),
@@ -168,23 +183,11 @@ fun ContactsList() {
                     listItems.add(text)
                     text = ""
                 } else {
-                    isDialogMustBeShown = true
+                    // Как сюда запихнуть ресурс?
+                    errorText = "Field is empty. Enter name"
                 }
             }
         ) { Text(stringResource(R.string.add_contact_button_text)) }
-
-        if (isDialogMustBeShown) {
-            AlertDialog(
-                title = { Text("Пустое поле ввода.\nЗабыл ввести имя?") },
-                onDismissRequest = {},
-                confirmButton = {
-                    Button(
-                        onClick = { isDialogMustBeShown = false },
-                        content = { Text("Ща введу") }
-                    )
-                },
-            )
-        }
     }
 }
 

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SimpleContactList</string>
+    <string name="delete_button_text">Удалить</string>
+    <string name="add_contact_button_text">Добавить контакт</string>
+    <string name="Add_contact_text_field_label">Введите имя контакта</string>
+    <string name="empty_text_field_toast_text">Поле ввода пустое</string>
+    <string name="empty_state_text">Тут еще ничего нет</string>
+    <string name="emty_name_field_error">Поле ввода пустое. Введите имя</string>
+</resources>
