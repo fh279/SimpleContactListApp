@@ -28,12 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -79,9 +74,8 @@ class MainActivity : ComponentActivity() {
     fun ContactsList() {
         // А как обрабатывать смену состояния? Типа, экран перевернул?
         // не обязательно юзать mutableStateListOf. попробуй metableStateOf а внутри лист строк.
-        val listItems = remember { mutableStateListOf<String>()}
-        var text by remember { mutableStateOf("") }
-        var errorText by remember { mutableStateOf("") }
+        val listState = remember { ListState() }
+
         // val insets = rememberKeyboardInsets() - что это за дичь из нейросетей?
 
         Column(
@@ -93,10 +87,9 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier.height(350.dp)
 
             ) {
-                if (listItems.isNotEmpty()) {
-                    items(listItems,
+                if (listState.listItems.isNotEmpty()) {
+                    items(listState.listItems,
                         // Вот это могло бы быть полезно если бы я динамически менял порядок элементов. Однако это не работало бы если имеются одинаковые имена. В идеале для идентификации каждого отдельного элемента следует заводит ьайдишники.
-                        key = { it }
                     ) { item ->
                         val (color1, color2) = remember {
                             Pair(
@@ -133,7 +126,7 @@ class MainActivity : ComponentActivity() {
                                     )
                             ) {
                                 Text(
-                                    text = item.getOrNull(0).toString() ?: "",
+                                    text = item.getOrNull(0).toString(),
                                     color = Color.White,
                                     modifier = Modifier.align(alignment = Alignment.Center)
                                 )
@@ -145,7 +138,7 @@ class MainActivity : ComponentActivity() {
                             )
                             Spacer(modifier = Modifier.weight(1f))
                             Button(
-                                onClick = { listItems.remove(item) },
+                                onClick = { listState.listItems.remove(item) },
                                 modifier = Modifier,
                                 shape = MaterialTheme.shapes.extraSmall,
                                 contentPadding = PaddingValues(
@@ -181,10 +174,10 @@ class MainActivity : ComponentActivity() {
             }
 
             OutlinedTextField(
-                value = text,
+                value = listState.text.value,
                 onValueChange = {
-                        newText -> text = newText
-                    errorText = ""
+                        newText: String -> listState.text.value = newText
+                    listState.errorText.value = ""
                 },
                 modifier = Modifier
                     .padding(start = 10.dp, end = 10.dp, top = 50.dp)
@@ -193,9 +186,9 @@ class MainActivity : ComponentActivity() {
                     .fillMaxWidth(),
                 label = { Text(stringResource(R.string.Add_contact_text_field_label)) },
                 supportingText = {
-                    if (errorText.isNotEmpty()) {
+                    if (listState.errorText.value.isNotEmpty()) {
                         Text(
-                            text = errorText,
+                            text = listState.errorText.value,
                             color = Color.Red
                         )
                     }
@@ -204,12 +197,12 @@ class MainActivity : ComponentActivity() {
             Button(
                 modifier = Modifier.padding(top = 0.dp),
                 onClick = {
-                    if (text.isNotBlank()) {
-                        listItems.add(text)
-                        text = ""
+                    if (listState.text.value.isNotBlank()) {
+                        listState.listItems.add(listState.text.value)
+                        listState.text.value = ""
                     } else {
                         // Как сюда запихнуть ресурс?
-                        errorText = this@MainActivity.getString(R.string.emty_name_field_error) // "Field is empty. Enter name"
+                        listState.errorText.value = this@MainActivity.getString(R.string.emty_name_field_error) // "Field is empty. Enter name"
                     }
                 }
             ) { Text(stringResource(R.string.add_contact_button_text)) }
