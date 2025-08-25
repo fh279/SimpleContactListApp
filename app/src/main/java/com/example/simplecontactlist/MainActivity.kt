@@ -49,8 +49,6 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // enableEdgeToEdge() - зачем вообще эта функция? fullscreen?
         setContent {
             SimpleContactListTheme {
                 Scaffold(modifier = Modifier
@@ -74,9 +72,13 @@ class MainActivity : ComponentActivity() {
     fun ContactsList() {
         // А как обрабатывать смену состояния? Типа, экран перевернул?
         // не обязательно юзать mutableStateListOf. попробуй metableStateOf а внутри лист строк.
-        val listState = remember { ListState() }
 
-        // val insets = rememberKeyboardInsets() - что это за дичь из нейросетей?
+        /*val listState = remember { ListState() }*/
+        // из за этого (эти двое расположено внутри активити) у нас затирается состояние. Так не надо. Нужно придумать как создать вьюмодель и listState так что бы и состояние хранилось, и все остальное работало.
+        val listState = remember { ListState() }
+        val viewModel = MyViewModel(
+            listState = listState,
+            stringResourcesProvider = StringResourcesProvider(this))
 
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -89,7 +91,6 @@ class MainActivity : ComponentActivity() {
             ) {
                 if (listState.listItems.isNotEmpty()) {
                     items(listState.listItems,
-                        // Вот это могло бы быть полезно если бы я динамически менял порядок элементов. Однако это не работало бы если имеются одинаковые имена. В идеале для идентификации каждого отдельного элемента следует заводит ьайдишники.
                     ) { item ->
                         val (color1, color2) = remember {
                             Pair(
@@ -176,8 +177,7 @@ class MainActivity : ComponentActivity() {
             OutlinedTextField(
                 value = listState.text.value,
                 onValueChange = {
-                        newText: String -> listState.text.value = newText
-                    listState.errorText.value = ""
+                        newText -> viewModel.onChangeTextFieldValue(newText)
                 },
                 modifier = Modifier
                     .padding(start = 10.dp, end = 10.dp, top = 50.dp)
@@ -186,24 +186,19 @@ class MainActivity : ComponentActivity() {
                     .fillMaxWidth(),
                 label = { Text(stringResource(R.string.Add_contact_text_field_label)) },
                 supportingText = {
-                    if (listState.errorText.value.isNotEmpty()) {
-                        Text(
-                            text = listState.errorText.value,
-                            color = Color.Red
-                        )
-                    }
+                    // Вся эта конструкция через let мне не нравится...
+                    viewModel.showErrorText(listState.errorText.value)?.let {
+                       Text(
+                           text = it,
+                           color = Color.Red
+                       )
+                   }
                 }
             )
             Button(
                 modifier = Modifier.padding(top = 0.dp),
                 onClick = {
-                    if (listState.text.value.isNotBlank()) {
-                        listState.listItems.add(listState.text.value)
-                        listState.text.value = ""
-                    } else {
-                        // Как сюда запихнуть ресурс?
-                        listState.errorText.value = this@MainActivity.getString(R.string.emty_name_field_error) // "Field is empty. Enter name"
-                    }
+                    viewModel.addItemToList(R.string.emty_name_field_error)
                 }
             ) { Text(stringResource(R.string.add_contact_button_text)) }
         }
