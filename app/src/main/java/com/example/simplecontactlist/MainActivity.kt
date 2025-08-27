@@ -79,9 +79,6 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun ContactsList(state: State<ListState>) {
         // А как обрабатывать смену состояния? Типа, экран перевернул?
-        // не обязательно юзать mutableStateListOf. попробуй metableStateOf а внутри лист строк.
-
-        /*val listState = remember { ListState() }*/
         // из за этого (эти двое расположено внутри активити) у нас затирается состояние. Так не надо. Нужно придумать как создать вьюмодель и listState так что бы и состояние хранилось, и все остальное работало.
         // val listState = remember { ListState(ListState.default()) } - теперь эта строка не нужна, потому что состояние теперь мы храним во вьюмодели (переменная state).
 
@@ -97,6 +94,7 @@ class MainActivity : ComponentActivity() {
             ) {
                 if (state.value.listItems.isNotEmpty()) {
                     items(state.value.listItems,
+                        key = { it.id }
                     ) { item ->
                         val (color1, color2) = remember {
                             Pair(
@@ -133,14 +131,15 @@ class MainActivity : ComponentActivity() {
                                     )
                             ) {
                                 Text(
-                                    text = item.getOrNull(0).toString(),
+                                    text = item.name.getOrNull(0).toString(),
                                     color = Color.White,
                                     modifier = Modifier.align(alignment = Alignment.Center)
                                 )
                             }
                             Spacer(modifier = Modifier.width(50.dp))
                             Column(modifier = Modifier.width(200.dp)) {
-                                Text(text = item)
+                                Text(text = item.name)
+/*Отслеживаю порядок удаления */Text(text = item.id.toString().takeLast(8))
                                 // Text(text = item) - тут дальше будет не item (который name, а номер телефона и это уже будет не item, а в качестве item надо будет передать объект, одним из пропертей которого является item, а другими - фамилия и номер телефона.
                             }
 
