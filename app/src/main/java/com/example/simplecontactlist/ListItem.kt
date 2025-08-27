@@ -6,8 +6,7 @@ data class ListItem(
     val name: String,
     val surname: String,
     val number: String,
-    val id: UUID = UUID.randomUUID(),
-    val color: Float
+    val id: UUID = UUID.randomUUID()
 ) {
 
 }
