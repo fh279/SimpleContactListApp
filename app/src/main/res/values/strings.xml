@@ -2,7 +2,9 @@
     <string name="app_name">SimpleContactList</string>
     <string name="delete_button_text">Delete</string>
     <string name="add_contact_button_text">Add Contact</string>
-    <string name="Add_contact_text_field_label">Enter contact name</string>
+    <string name="Add_contact_name_field_label">Enter contact name</string>
+    <string name="Add_contact_surname_field_label">Enter contact surname</string>
+    <string name="Add_contact_number_field_label">Enter contact number</string>
     <string name="empty_text_field_toast_text">Field is empty</string>
     <string name="empty_state_text">There is nothing here yet</string>
     <string name="emty_name_field_error">Field is empty. Enter name</string>
