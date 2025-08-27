@@ -1,13 +1,12 @@
 package com.example.simplecontactlist
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.currentComposer
-import androidx.compose.ui.util.fastFilter
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.util.UUID
 
 class MyViewModel(
 
@@ -66,8 +65,12 @@ class MyViewModel(
         if (/*isFieldsNotBlank() - это будет надо когда вернешь закомменченные поля. */ _state.value.name.isNotBlank()) {
             _state.update { currentState ->
                 currentState.copy(
-                    listItems = currentState.listItems + currentState.name, // listOf(currentState.name), // а это точно так делать надо?
-                    name = ""
+                    listItems = currentState.listItems + ListItem(
+                        name = currentState.name,
+                        surname = "",
+                        number = "",
+                        id = UUID.randomUUID()
+                    )  // listOf(currentState.name), // а это точно так делать надо?
                 )
             }
         } else {
@@ -79,14 +82,10 @@ class MyViewModel(
         }
     }
 
-    fun removeItemFromList(itemToRemove: String) {
+    fun removeItemFromList(itemToRemove: ListItem) {
         _state.update { currentState ->
-            val elementIndexToDelete = currentState.listItems.toMutableList().indexOf(itemToRemove)
             currentState.copy(
-                // вот это - плохо. оно удаляет не текущий элемент, а первый такой же. Не обязательно целевой. Очень опасный баг.
-                listItems = currentState.listItems.toMutableList().apply {
-                    removeAt(elementIndexToDelete)
-                }
+                listItems = currentState.listItems.filter { it.id != itemToRemove.id }
             )
         }
     }
