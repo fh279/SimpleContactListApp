@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +22,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -40,6 +43,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.simplecontactlist.ui.theme.SimpleContactListTheme
 import kotlin.random.Random
@@ -48,12 +53,21 @@ class MainActivity : ComponentActivity() {
     // Такое решение сомнительно.
     private val randomColor: Float
         get() = Random.nextFloat()
-    private val viewModel = MyViewModel(
-        stringResourcesProvider = StringResourcesProvider(this))
+    //это вот так было по старому. private val viewModel = MyViewModel(stringResourcesProvider = StringResourcesProvider(this)) - не будет работать в случае переворота экрана, потому что это кастомный конструктор и он инстанциируетсся при пересоздании активити и данные затираются.
+    // нам это не надо пока что private val viewModel: MyViewModel by viewModels() - а вот это будет работать. Поворот экрана заработал, данные не перезатираются. Но Так это работает только в случае если во Вьюмодель не надо передавать аргументы.
+    // Задача с ******: написать свой делегат для получения кастомизируемых ViewModel. Когда-нибудь.
+    // И тогда стал вопрос - а как сделать так что б и аргументы во ViewModel можно было передавать, и она не умирала. Тогда я узнал через гугл что можно использовать ViewModelProvider.Factory - провайдер, в который надо передать фабрику по созданию вьюмоделей. В ней надо оверрайдить метод create. И тогда можно вне активити создать фабрику, сделать lateinit вьюмодель, а потом вьюмодель проинициализировать в активити. и вот эта конструкция будет хранить состояния не умирая при пересоздании активности.
+    private val vmFactory = MyViewModelFactory(StringResourcesProvider(this))
+    lateinit var viewModel: MyViewModel
+
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel =  ViewModelProvider(
+                owner = this,
+        factory = vmFactory
+        ).get(MyViewModel::class.java)
         setContent {
             SimpleContactListTheme {
                 Scaffold(modifier = Modifier
@@ -84,7 +98,9 @@ class MainActivity : ComponentActivity() {
 
 
         Column(
-            modifier = Modifier.fillMaxSize().imePadding(),
+            modifier = Modifier.fillMaxSize().imePadding().verticalScroll(
+                rememberScrollState()
+            ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LazyColumn(
@@ -194,8 +210,14 @@ class MainActivity : ComponentActivity() {
                         .fillMaxWidth(),
                     label = { Text(stringResource(R.string.Add_contact_name_field_label)) },
                     supportingText = {
+                        Text(
+                            text = "", // viewModel.showErrorText().toString(),
+                            color = Color.Red
+                        )
+                    }
+                    /*supportingText = {
                         // Вся эта конструкция через let мне не нравится...
-                        state.value.errorText?.let {
+                        state.value.errorText.let {
                             viewModel.showErrorText(it)?.let {
                                 Text(
                                     text = it,
@@ -203,7 +225,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                    }
+                    }*/
                 )
 
                 /*OutlinedTextField(
@@ -244,21 +266,18 @@ class MainActivity : ComponentActivity() {
                     },
                 )*/
 
+                val text = stringResource(R.string.emty_name_field_error)
                 Button(
                     modifier = Modifier.padding(top = 0.dp),
                     onClick = {
+
                         viewModel.addItemToList(
-                            emptyStateStringResource = R.string.emty_name_field_error
+                            emptyStateStringResource = text,
                         )
                     }
                 ) { Text(stringResource(R.string.add_contact_button_text)) }
 
             }
-
-
-
-
-
         }
     }
 
