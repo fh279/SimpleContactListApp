@@ -6,7 +6,7 @@ data class ListState(
     val name: String = emptyString(),
     val surName: String = emptyString(),
     val number: String = emptyString(),
-    val errorText: String?
+    val errorText: String
 ) {
     companion object {
         fun default(): ListState {
