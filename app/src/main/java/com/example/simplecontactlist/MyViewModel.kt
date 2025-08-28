@@ -29,8 +29,7 @@ class MyViewModel(
     val state: StateFlow<ListState> =  _state.asStateFlow()
 
     // Название метода - караул.
-    // тут надо было по другому как то. не name.
-    fun onChangeTextFieldValue(/*field: MutableState<String>, - захера оно тут?.. */text: String) {
+    fun onChangeTextFieldValue(text: String) {
         _state.update { currentState ->
             currentState.copy(
             name = text,
@@ -49,7 +48,10 @@ class MyViewModel(
         }
     }
 
-    // пока что закомментил что бы только на имени отточить/
+    /** Gока что закомментил что бы только на имени отточить. UPD: базово проверил что VM работает
+    как надо, теперь надо раскомментить код ниже и настроить обработку пользовательского ввода
+    с учетом полей, которые прописаны ниже.
+     */
     /*fun onChangeSurnameValue(text: String) {
         _state.surName.value = text
         _state.errorText.value = ""
@@ -61,7 +63,6 @@ class MyViewModel(
     }*/
 
     // Название метода - караул.
-    // Метод должен быть Unit как сейчас или следует сделать что бы он возвращал String и его работу куда-то присваивать?
     fun addItemToList(emptyStateStringResource: String) {
         if (/*isFieldsNotBlank() - это будет надо когда вернешь закомменченные поля. */ _state.value.name.isNotBlank()) {
             _state.update { currentState ->
@@ -71,7 +72,7 @@ class MyViewModel(
                         surname = "",
                         number = "",
                         id = UUID.randomUUID()
-                    )  // listOf(currentState.name), // а это точно так делать надо?
+                    )
                 )
             }
         } else {
@@ -91,7 +92,7 @@ class MyViewModel(
         }
     }
 
-    // Вот эта штука нам понадобится позже. Не сейчас, когда я работаю только с одним полем.
+    /** Это нам понадобится позже. Не сейчас, когда я работаю только с одним полем. */
     /*private fun isFieldsNotBlank(): Boolean {
         return _state.value.run {
             name.isNotBlank() &&
@@ -100,7 +101,7 @@ class MyViewModel(
         }
     }*/
 
-    // Название метода некорректно - он не показывает ничего, он просто обрабатывает логику, а показывает то, где он вызывается ( Compose - функция )
+    // Название метода некорректно
     /*fun showErrorText(
         textInOTF: String,
     ): String? {
@@ -108,12 +109,14 @@ class MyViewModel(
             _state.value.errorText
         } else null
     }*/
-    // это надо будет раскомментить когда разрулим со строками.
+    /** "то пора раскомментировать и приладить к имеющемуся коду */
     /*fun showErrorText() {
         _state.update { it.copy(errorText = getLocalizedString(R.string.emty_name_field_error)) }
     }*/
 
-    // Следует ли подобные методы оформлять именно так, и если нет, то как? + вопрос - нейминг норм?
+    /** Сам метод (как и stringResourcesProvider) здесь существуют исключительно в учебных целях.
+     *  Можно обойтись без него и получать строки в compose-функциях через метод stringResource()
+     * */
     /*private fun getLocalizedString(resource: Int): String {
         return stringResourcesProvider.getString(resource)
     }*/

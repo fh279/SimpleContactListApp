@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +31,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +41,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.simplecontactlist.ui.theme.SimpleContactListTheme
@@ -53,10 +50,23 @@ class MainActivity : ComponentActivity() {
     // Такое решение сомнительно.
     private val randomColor: Float
         get() = Random.nextFloat()
-    //это вот так было по старому. private val viewModel = MyViewModel(stringResourcesProvider = StringResourcesProvider(this)) - не будет работать в случае переворота экрана, потому что это кастомный конструктор и он инстанциируетсся при пересоздании активити и данные затираются.
-    // нам это не надо пока что private val viewModel: MyViewModel by viewModels() - а вот это будет работать. Поворот экрана заработал, данные не перезатираются. Но Так это работает только в случае если во Вьюмодель не надо передавать аргументы.
-    // Задача с ******: написать свой делегат для получения кастомизируемых ViewModel. Когда-нибудь.
-    // И тогда стал вопрос - а как сделать так что б и аргументы во ViewModel можно было передавать, и она не умирала. Тогда я узнал через гугл что можно использовать ViewModelProvider.Factory - провайдер, в который надо передать фабрику по созданию вьюмоделей. В ней надо оверрайдить метод create. И тогда можно вне активити создать фабрику, сделать lateinit вьюмодель, а потом вьюмодель проинициализировать в активити. и вот эта конструкция будет хранить состояния не умирая при пересоздании активности.
+    /** Немного истории по работе над ViewModel.
+     * Вот так это было по старому:
+     * private val viewModel = MyViewModel(stringResourcesProvider = StringResourcesProvider(this))
+     * - не будет работать в случае переворота экрана, потому что это кастомный конструктор и он
+     * инстанциируетсся при пересоздании активити и данные затираются.
+     * Затем был найден другой вариант:
+     * private val viewModel: MyViewModel by viewModels() Поворот экрана заработал, данные не перезатираются.
+     * Но ТАК это работает только в случае если во Вьюмодель не надо передавать аргументы.
+     * И тогда стал вопрос - как сделать так что б и аргументы во ViewModel можно было передавать,
+     * и она не умирала с пересозданием Activity. Тогда я узнал что можно
+     * использовать ViewModelProvider.Factory - провайдер, в который надо передать фабрику по созданию
+     * вьюмоделей. И тогда можно вне активити создать фабрику, сделать lateinit вьюмодель,
+     * а потом вьюмодель проинициализировать в активити. и вот эта конструкция будет хранить состояния не умирая при пересоздании активности.
+     *
+     * Задача со звёздочкой: написать свой делегат для получения кастомизируемых ViewModel. Когда-нибудь.
+     */
+
     private val vmFactory = MyViewModelFactory(StringResourcesProvider(this))
     lateinit var viewModel: MyViewModel
 
@@ -215,6 +225,7 @@ class MainActivity : ComponentActivity() {
                             color = Color.Red
                         )
                     }
+                    /** Весь код ниже - раскомментировать и привести к макету */
                     /*supportingText = {
                         // Вся эта конструкция через let мне не нравится...
                         state.value.errorText.let {
