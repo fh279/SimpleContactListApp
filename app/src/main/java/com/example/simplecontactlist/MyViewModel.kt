@@ -11,6 +11,7 @@ import java.util.UUID
 class MyViewModel(
     // Либо вернуть использование StringResourcesProvider (больше - в опытных целях, чем по необходимости, ибо можно обойти необходимость в этой штуке и использовать композный stringResource. Либо убрать и вернуть получение вьюмодели через by viewModels().
     private val stringResourcesProvider: StringResourcesProvider
+    // smth: Resources - прикольная штука для получения ресурсов
 ) : ViewModel() {
 
     // Это - изменяемое состояние, которое хранится внутри ViewModel'и. Изменение этого состояния
@@ -29,50 +30,47 @@ class MyViewModel(
     val state: StateFlow<ListState> =  _state.asStateFlow()
 
     // Название метода - караул.
-    fun onChangeTextFieldValue(text: String) {
+    fun onChangeNameFieldValue(text: String) {
         _state.update { currentState ->
             currentState.copy(
-            name = text,
-            errorText = ""
-            )
-        }
-    }
-
-    // С этим что делать?
-    fun onChangeNameValue(text: String) {
-        _state.update {
-            it.copy(
                 name = text,
                 errorText = ""
             )
         }
     }
 
-    /** Gока что закомментил что бы только на имени отточить. UPD: базово проверил что VM работает
-    как надо, теперь надо раскомментить код ниже и настроить обработку пользовательского ввода
-    с учетом полей, которые прописаны ниже.
-     */
-    /*fun onChangeSurnameValue(text: String) {
-        _state.surName.value = text
-        _state.errorText.value = ""
+    fun onChangeSurnameValue(text: String) {
+        _state.update { currentState ->
+            currentState.copy(
+                surName = text,
+                errorText = ""
+            )
+        }
     }
 
     fun onChangeNumberValue(text: String) {
-        _state.number.value = text
-        _state.errorText.value = ""
-    }*/
+        _state.update { currentState ->
+            currentState.copy(
+                number = text,
+                errorText = ""
+            )
+        }
+    }
 
     // Название метода - караул.
     fun addItemToList(emptyStateStringResource: String) {
-        if (/*isFieldsNotBlank() - это будет надо когда вернешь закомменченные поля. */ _state.value.name.isNotBlank()) {
+        if (!isFieldsEmpty()) {
             _state.update { currentState ->
                 currentState.copy(
                     listItems = currentState.listItems + ListItem(
-                        name = currentState.name,
-                        surname = "",
-                        number = "",
+                        name = capitalizeFirstLetterInString(currentState.name),
+                        surname = capitalizeFirstLetterInString(currentState.surName),
+                        number = currentState.number,
                         id = UUID.randomUUID()
-                    )
+                    ),
+                    name = "",
+                    surName = "",
+                    number = ""
                 )
             }
         } else {
@@ -92,34 +90,33 @@ class MyViewModel(
         }
     }
 
-    /** Это нам понадобится позже. Не сейчас, когда я работаю только с одним полем. */
-    /*private fun isFieldsNotBlank(): Boolean {
-        return _state.value.run {
-            name.isNotBlank() &&
-            surName.isNotBlank() &&
-            number.isNotBlank()
-        }
-    }*/
+    private fun isFieldsEmpty(): Boolean {
+        return _state.value.run { name.isEmpty() && surName.isEmpty() && number.isEmpty() }
+    }
 
-    // Название метода некорректно
-    /*fun showErrorText(
-        textInOTF: String,
-    ): String? {
-        return if (textInOTF.isNotEmpty()) {
-            _state.value.errorText
-        } else null
-    }*/
-    /** "то пора раскомментировать и приладить к имеющемуся коду */
-    /*fun showErrorText() {
+    fun showErrorText() {
         _state.update { it.copy(errorText = getLocalizedString(R.string.emty_name_field_error)) }
-    }*/
+    }
+
+    fun clearErrorText() {
+        _state.update { it.copy(errorText = "") }
+    }
 
     /** Сам метод (как и stringResourcesProvider) здесь существуют исключительно в учебных целях.
      *  Можно обойтись без него и получать строки в compose-функциях через метод stringResource()
      * */
-    /*private fun getLocalizedString(resource: Int): String {
+    private fun getLocalizedString(resource: Int): String {
         return stringResourcesProvider.getString(resource)
-    }*/
+    }
+
+    private fun capitalizeFirstLetterInString(string: String): String {
+        return string.mapIndexed { index, char  ->
+            when (index) {
+                0 -> char.uppercase()
+                else -> char
+            }
+        }.joinToString("")
+    }
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -138,4 +135,3 @@ class MyViewModelFactory(val provider: StringResourcesProvider): ViewModelProvid
         }
     }
 }
-

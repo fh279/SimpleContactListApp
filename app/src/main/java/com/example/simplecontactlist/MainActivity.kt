@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -67,16 +69,17 @@ class MainActivity : ComponentActivity() {
      * Задача со звёздочкой: написать свой делегат для получения кастомизируемых ViewModel. Когда-нибудь.
      */
 
+
     private val vmFactory = MyViewModelFactory(StringResourcesProvider(this))
-    lateinit var viewModel: MyViewModel
+    private lateinit var viewModel: MyViewModel
 
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel =  ViewModelProvider(
-                owner = this,
-        factory = vmFactory
+            owner = this,
+            factory = vmFactory
         ).get(MyViewModel::class.java)
         setContent {
             SimpleContactListTheme {
@@ -105,7 +108,6 @@ class MainActivity : ComponentActivity() {
         // А как обрабатывать смену состояния? Типа, экран перевернул?
         // из за этого (эти двое расположено внутри активити) у нас затирается состояние. Так не надо. Нужно придумать как создать вьюмодель и listState так что бы и состояние хранилось, и все остальное работало.
         // val listState = remember { ListState(ListState.default()) } - теперь эта строка не нужна, потому что состояние теперь мы храним во вьюмодели (переменная state).
-
 
         Column(
             modifier = Modifier.fillMaxSize().imePadding().verticalScroll(
@@ -164,9 +166,8 @@ class MainActivity : ComponentActivity() {
                             }
                             Spacer(modifier = Modifier.width(50.dp))
                             Column(modifier = Modifier.width(200.dp)) {
-                                Text(text = item.name)
-/*Отслеживаю порядок удаления */Text(text = item.id.toString().takeLast(8))
-                                // Text(text = item) - тут дальше будет не item (который name, а номер телефона и это уже будет не item, а в качестве item надо будет передать объект, одним из пропертей которого является item, а другими - фамилия и номер телефона.
+                                Text(text = "${item.name} ${item.surname}")
+                                Text(text = item.number)
                             }
 
                             Spacer(modifier = Modifier.weight(1f))
@@ -208,12 +209,22 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            Column {
+            Column(
+                modifier = Modifier.padding(all = 10.dp).fillMaxSize().border(
+                    width = 1.dp,
+                    color = Color.Black,
+                    shape = RoundedCornerShape(16.dp)
+                ).padding(all = 20.dp)
+            ) {
                 // Интересно чего это метод onChangeNameValue не работает когда написан универсально, но работает когда написано 3 отдельных метода. по любому есть решение.
                 // А еще надо текст ошибки разтиражировать с 1 до 3 (на 3 поля вместо 1) и вставлять когда и где надо.
                 OutlinedTextField(
                     value = state.value.name,
-                    onValueChange = { name -> viewModel.onChangeTextFieldValue(name)/*onChangeNameValue(name)*/ },
+                    onValueChange = {
+                        name -> viewModel.onChangeNameFieldValue(name)
+                        viewModel.clearErrorText()
+
+                    },
                     modifier = Modifier
                         .width(250.dp)
                         .align(Alignment.CenterHorizontally)
@@ -221,7 +232,7 @@ class MainActivity : ComponentActivity() {
                     label = { Text(stringResource(R.string.Add_contact_name_field_label)) },
                     supportingText = {
                         Text(
-                            text = "", // viewModel.showErrorText().toString(),
+                            text = state.value.errorText, // viewModel.showErrorText().toString(),
                             color = Color.Red
                         )
                     }
@@ -239,52 +250,50 @@ class MainActivity : ComponentActivity() {
                     }*/
                 )
 
-                /*OutlinedTextField(
-                    value = listState.surName.value,
-                    onValueChange = { surName -> viewModel.onChangeSurnameValue(surName) },
+                OutlinedTextField(
+                    value = state.value.surName,
+                    onValueChange = {
+                        surName -> viewModel.onChangeSurnameValue(surName)
+                        viewModel.clearErrorText()
+                    },
                     modifier = Modifier
                         .width(250.dp)
                         .align(Alignment.CenterHorizontally)
                         .fillMaxWidth(),
                     label = { Text(stringResource(R.string.Add_contact_surname_field_label)) },
                     supportingText = {
-                        // Вся эта конструкция через let мне не нравится...
-                        viewModel.showErrorText(listState.errorText.value)?.let {
-                            Text(
-                                text = it,
-                                color = Color.Red
-                            )
-                        }
+                        Text(
+                            text = state.value.errorText,
+                            color = Color.Red
+                        )
                     }
                 )
 
                 OutlinedTextField(
-                    value = listState.number.value,
-                    onValueChange = { number -> viewModel.onChangeNumberValue(number) },
+                    value = state.value.number,
+                    onValueChange = { number -> viewModel.onChangeNumberValue(number)
+                        viewModel.clearErrorText()
+                    },
                     modifier = Modifier
                         .width(250.dp)
                         .align(Alignment.CenterHorizontally)
                         .fillMaxWidth(),
                     label = { Text(stringResource(R.string.Add_contact_number_field_label)) },
                     supportingText = {
-                        // Вся эта конструкция через let мне не нравится...
-                        viewModel.showErrorText(listState.errorText.value)?.let {
-                            Text(
-                                text = it,
-                                color = Color.Red
-                            )
-                        }
+                        Text(
+                            text = state.value.errorText,
+                            color = Color.Red
+                        )
                     },
-                )*/
+                )
 
                 val text = stringResource(R.string.emty_name_field_error)
                 Button(
-                    modifier = Modifier.padding(top = 0.dp),
+                    modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
                     onClick = {
-
-                        viewModel.addItemToList(
-                            emptyStateStringResource = text,
-                        )
+                        viewModel.run {
+                            addItemToList(emptyStateStringResource = text)
+                        }
                     }
                 ) { Text(stringResource(R.string.add_contact_button_text)) }
 
