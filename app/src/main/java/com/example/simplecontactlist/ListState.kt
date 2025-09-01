@@ -1,6 +1,5 @@
 package com.example.simplecontactlist
 
-// ОДин из способов описывать состояния - data class.
 data class ListState(
     val listItems: List<ListItem>  = listOf(),
     val name: String = emptyString(),
