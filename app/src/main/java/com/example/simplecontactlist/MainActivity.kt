@@ -37,7 +37,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -50,9 +49,6 @@ import com.example.simplecontactlist.ui.theme.SimpleContactListTheme
 import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
-    // Такое решение сомнительно.
-    private val randomColor: Float
-        get() = Random.nextFloat()
     /** Немного истории по работе над ViewModel.
      * Вот так это было по старому:
      * private val viewModel = MyViewModel(stringResourcesProvider = StringResourcesProvider(this))
@@ -73,7 +69,6 @@ class MainActivity : ComponentActivity() {
 
     private val vmFactory = MyViewModelFactory(StringResourcesProvider(this))
     private lateinit var viewModel: MyViewModel
-
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -121,8 +116,6 @@ class MainActivity : ComponentActivity() {
             LazyColumn(
                 contentPadding = PaddingValues(all = 0.dp),
                 modifier = Modifier
-                    // .align(Alignment.CenterHorizontally)
-
                     .fillMaxSize()
                     .padding(
                         start = 10.dp,
@@ -135,25 +128,16 @@ class MainActivity : ComponentActivity() {
                         shape = RoundedCornerShape(5.dp)
                     )
                     .background(color = Color.White, shape = RoundedCornerShape(16.dp))
-
-
             ) {
                 if (state.value.listItems.isNotEmpty()) {
                     items(state.value.listItems,
                         key = { it.id }
                     ) { item ->
-                        val (color1, color2) = remember {
-                            Pair(
-                                Color(
-                                    red = randomColor,
-                                    green = randomColor,
-                                    blue = randomColor
-                                ),
-                                Color(
-                                    red = randomColor,
-                                    green = randomColor,
-                                    blue = randomColor
-                                )
+                        val color = remember {
+                            Color(
+                                red = Random.nextFloat(),
+                                green = Random.nextFloat(),
+                                blue = Random.nextFloat()
                             )
                         }
 
@@ -174,12 +158,7 @@ class MainActivity : ComponentActivity() {
                                     .size(40.dp)
                                     .clip(CircleShape)
                                     .background(
-                                        brush = Brush.radialGradient(
-                                            colors = listOf(
-                                                color1,
-                                                color2
-                                            )
-                                        )
+                                        color = color
                                     )
                             ) {
                                 Text(
@@ -279,18 +258,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
-                    /** Весь код ниже - раскомментировать и привести к макету */
-                    /*supportingText = {
-                        // Вся эта конструкция через let мне не нравится...
-                        state.value.errorText.let {
-                            viewModel.showErrorText(it)?.let {
-                                Text(
-                                    text = it,
-                                    color = Color.Red
-                                )
-                            }
-                        }
-                    }*/
                 )
 
                 OutlinedTextField(
