@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -39,8 +40,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
@@ -110,14 +114,31 @@ class MainActivity : ComponentActivity() {
         // val listState = remember { ListState(ListState.default()) } - теперь эта строка не нужна, потому что состояние теперь мы храним во вьюмодели (переменная state).
 
         Column(
-            modifier = Modifier.fillMaxSize().imePadding().verticalScroll(
-                rememberScrollState()
-            ),
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .background(color = Color(red = 192, green = 192 , blue = 192)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LazyColumn(
                 contentPadding = PaddingValues(all = 0.dp),
-                modifier = Modifier.height(350.dp)
+                modifier = Modifier
+                    // .align(Alignment.CenterHorizontally)
+
+                    .fillMaxSize()
+                    .padding(
+                        start = 10.dp,
+                        end = 10.dp
+                    )
+                    .height(350.dp)
+                    .border(
+                        width = 1.dp,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(5.dp)
+                    )
+                    .background(color = Color.White, shape = RoundedCornerShape(16.dp))
+
 
             ) {
                 if (state.value.listItems.isNotEmpty()) {
@@ -142,8 +163,14 @@ class MainActivity : ComponentActivity() {
                         Row(
                             horizontalArrangement = Arrangement.Absolute.Left,
                             modifier = Modifier
-                                .padding(start = 12.dp, end = 12.dp)
+                                .padding(start = 12.dp, end = 12.dp, top = 10.dp)
                                 .fillMaxWidth()
+                                .background(color = Color.White, shape = RoundedCornerShape(5.dp))
+                                .border(
+                                    width = 1.dp,
+                                    color = Color.Black,
+                                    shape = RoundedCornerShape(5.dp)
+                                )
                         ) {
                             Box(
                                 modifier = Modifier
@@ -175,7 +202,7 @@ class MainActivity : ComponentActivity() {
                                 onClick = {
                                     viewModel.removeItemFromList(item)
                                 },
-                                modifier = Modifier,
+                                modifier = Modifier.padding(end = 10.dp),
                                 shape = MaterialTheme.shapes.extraSmall,
                                 contentPadding = PaddingValues(
                                     start = 2.dp,
@@ -194,12 +221,15 @@ class MainActivity : ComponentActivity() {
                 else {
                     // Items использован что бы задать composable скоуп и иметь возможность добавить изображение emptyState'а.
                     items(arrayListOf("")) {
-                        Column {
+                        Column(
+                            modifier = Modifier.fillMaxSize()/*.border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(16.dp))*/.padding(all = 20.dp)
+                        ) {
                             Image(painter = painterResource(id = R.drawable.emptystate2),
                                 contentDescription = "EmptyState",
                                 modifier = Modifier
                                     .size(170.dp)
                                     .clip(CircleShape)
+                                    .align(alignment = Alignment.CenterHorizontally)
                             )
                             Text(
                                 text = stringResource(R.string.empty_state_text),
@@ -210,12 +240,26 @@ class MainActivity : ComponentActivity() {
             }
 
             Column(
-                modifier = Modifier.padding(all = 10.dp).fillMaxSize().border(
-                    width = 1.dp,
-                    color = Color.Black,
-                    shape = RoundedCornerShape(16.dp)
-                ).padding(all = 20.dp)
+                modifier = Modifier
+                    .padding(all = 10.dp)
+                    .fillMaxSize()
+                    .border(
+                        width = 1.dp,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .background(
+                        color = Color.White,
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .padding(all = 20.dp)
+
             ) {
+                Text(
+                    text = "Add new context",
+                    modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
+                    fontWeight = FontWeight.Bold
+                    )
                 // Интересно чего это метод onChangeNameValue не работает когда написан универсально, но работает когда написано 3 отдельных метода. по любому есть решение.
                 // А еще надо текст ошибки разтиражировать с 1 до 3 (на 3 поля вместо 1) и вставлять когда и где надо.
                 OutlinedTextField(
@@ -231,10 +275,12 @@ class MainActivity : ComponentActivity() {
                         .fillMaxWidth(),
                     label = { Text(stringResource(R.string.Add_contact_name_field_label)) },
                     supportingText = {
-                        Text(
-                            text = state.value.errorText, // viewModel.showErrorText().toString(),
-                            color = Color.Red
-                        )
+                        if (state.value.isNameEmpty) {
+                            Text(
+                                text = state.value.errorText,
+                                color = Color.Red
+                            )
+                        }
                     }
                     /** Весь код ниже - раскомментировать и привести к макету */
                     /*supportingText = {
@@ -262,10 +308,12 @@ class MainActivity : ComponentActivity() {
                         .fillMaxWidth(),
                     label = { Text(stringResource(R.string.Add_contact_surname_field_label)) },
                     supportingText = {
-                        Text(
-                            text = state.value.errorText,
-                            color = Color.Red
-                        )
+                        if (state.value.isSurNameEmpty) {
+                            Text(
+                                text = state.value.errorText,
+                                color = Color.Red
+                            )
+                        }
                     }
                 )
 
@@ -280,21 +328,19 @@ class MainActivity : ComponentActivity() {
                         .fillMaxWidth(),
                     label = { Text(stringResource(R.string.Add_contact_number_field_label)) },
                     supportingText = {
-                        Text(
-                            text = state.value.errorText,
-                            color = Color.Red
-                        )
+                        if (state.value.isNumberEmpty) {
+                            Text(
+                                text = state.value.errorText,
+                                color = Color.Red
+                            )
+                        }
                     },
                 )
 
                 val text = stringResource(R.string.emty_name_field_error)
                 Button(
                     modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
-                    onClick = {
-                        viewModel.run {
-                            addItemToList(emptyStateStringResource = text)
-                        }
-                    }
+                    onClick = { viewModel.addItemToList(emptyStateStringResource = text) }
                 ) { Text(stringResource(R.string.add_contact_button_text)) }
 
             }

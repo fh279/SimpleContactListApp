@@ -34,7 +34,8 @@ class MyViewModel(
         _state.update { currentState ->
             currentState.copy(
                 name = text,
-                errorText = ""
+                errorText = "",
+                isNameEmpty = text.isEmpty()
             )
         }
     }
@@ -43,7 +44,8 @@ class MyViewModel(
         _state.update { currentState ->
             currentState.copy(
                 surName = text,
-                errorText = ""
+                errorText = "",
+                isSurNameEmpty = text.isEmpty()
             )
         }
     }
@@ -52,14 +54,15 @@ class MyViewModel(
         _state.update { currentState ->
             currentState.copy(
                 number = text,
-                errorText = ""
+                errorText = "",
+                isNumberEmpty = text.isEmpty()
             )
         }
     }
 
     // Название метода - караул.
     fun addItemToList(emptyStateStringResource: String) {
-        if (!isFieldsEmpty()) {
+        if (isFieldsNotEmpty()) {
             _state.update { currentState ->
                 currentState.copy(
                     listItems = currentState.listItems + ListItem(
@@ -73,7 +76,8 @@ class MyViewModel(
                     number = ""
                 )
             }
-        } else {
+        } // Ниже какая-то двойная обработка условий. Я и так проверяю на пустоту все строки отдельно, а тут еще и дополнительно проверка всех троих сразу.
+        else {
             _state.update { currentState ->
                 currentState.copy(
                     errorText = emptyStateStringResource
@@ -90,9 +94,11 @@ class MyViewModel(
         }
     }
 
-    private fun isFieldsEmpty(): Boolean {
-        return _state.value.run { name.isEmpty() && surName.isEmpty() && number.isEmpty() }
+    private fun isFieldsNotEmpty(): Boolean {
+        return _state.value.run { name.isNotEmpty() && surName.isNotEmpty() && number.isNotEmpty() }
     }
+
+    private fun isAtLeastOneFieldEmpty(): Boolean = _state.value.run { name.isEmpty() || surName.isEmpty() || number.isEmpty() }
 
     fun showErrorText() {
         _state.update { it.copy(errorText = getLocalizedString(R.string.emty_name_field_error)) }

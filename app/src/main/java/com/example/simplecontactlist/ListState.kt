@@ -6,6 +6,9 @@ data class ListState(
     val name: String = emptyString(),
     val surName: String = emptyString(),
     val number: String = emptyString(),
+    val isNameEmpty: Boolean = true,
+    val isSurNameEmpty: Boolean = true,
+    val isNumberEmpty: Boolean = true,
     val errorText: String
 ) {
     companion object {
