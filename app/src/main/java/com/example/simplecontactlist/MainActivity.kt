@@ -4,15 +4,18 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,10 +25,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -79,11 +81,15 @@ class MainActivity : ComponentActivity() {
         ).get(MyViewModel::class.java)
         setContent {
             SimpleContactListTheme {
-                Scaffold(modifier = Modifier
-                    .fillMaxSize()
-                    .imePadding()
-                ) {/* innerPadding ->*/
-                    MainScreen()
+                // enableEdgeToEdge()
+
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    contentWindowInsets = WindowInsets(0,0,0,0)
+                ) { innerPadding ->
+                    MainScreen(Modifier
+                        .fillMaxSize()
+                        .padding())
                     // Почему если оформить кнопку в отдельную Compose функцию, то она появляется не под списком, а в самом верху? Можно ли добиться такого что бы элементы экрана были в отдельных композициях, но располагались в порядке вызова функций?
                     // AddContactButton()
                 }
@@ -92,31 +98,32 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun MainScreen() {
+    fun MainScreen(modifier: Modifier = Modifier) {
         // 1. Преобразует StateFlow (тип из корутин) в State (тип из compose)
         // 2. Здесь происходит подписка на StateFlow. То есть мы можем следить за измеенениями нашего state.
-        val state = viewModel.state.collectAsStateWithLifecycle()
-        ContactsList(state)
+        val state: State<ListState> = viewModel.state.collectAsStateWithLifecycle()
+        val listState: ListState = state.value
+        ContactsList(modifier, listState)
     }
 
+    @OptIn(ExperimentalLayoutApi::class)
     @Composable
-    fun ContactsList(state: State<ListState>) {
+    fun ContactsList(modifier: Modifier = Modifier, state: ListState) {
         // А как обрабатывать смену состояния? Типа, экран перевернул?
         // из за этого (эти двое расположено внутри активити) у нас затирается состояние. Так не надо. Нужно придумать как создать вьюмодель и listState так что бы и состояние хранилось, и все остальное работало.
         // val listState = remember { ListState(ListState.default()) } - теперь эта строка не нужна, потому что состояние теперь мы храним во вьюмодели (переменная state).
-
+        // Вот тут беда. Надо будет разобраться с тем что такое WindowInsets. Я не могу это включить в импорты проекта, но на гугл девелоперс это есть. Надо разбираться. Нейросеть упорно говорит что нам туда. https://developer.android.com/reference/kotlin/androidx/compose/foundation/layout/WindowInsets
+        // val rootView = LocalView.current
+        // val keyboardHeight = remember {         WindowInsetsAnimationController(WindowInsetsType.ime())
+        
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .background(color = Color(red = 192, green = 192 , blue = 192)),
+            modifier = modifier,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LazyColumn(
                 contentPadding = PaddingValues(all = 0.dp),
+                state = rememberLazyListState(),
                 modifier = Modifier
-                    .fillMaxSize()
                     .padding(
                         start = 10.dp,
                         end = 10.dp
@@ -129,8 +136,8 @@ class MainActivity : ComponentActivity() {
                     )
                     .background(color = Color.White, shape = RoundedCornerShape(16.dp))
             ) {
-                if (state.value.listItems.isNotEmpty()) {
-                    items(state.value.listItems,
+                if (state.listItems.isNotEmpty()) {
+                    items(state.listItems,
                         key = { it.id }
                     ) { item ->
                         val color = remember {
@@ -160,6 +167,7 @@ class MainActivity : ComponentActivity() {
                                     .background(
                                         color = color
                                     )
+                                    .padding(top = 15.dp)
                             ) {
                                 Text(
                                     text = item.name.getOrNull(0).toString(),
@@ -173,7 +181,7 @@ class MainActivity : ComponentActivity() {
                                 Text(text = item.number)
                             }
 
-                            Spacer(modifier = Modifier.weight(1f))
+                            Spacer(modifier = Modifier/*.weight(0.1f)*/)
                             Button(
                                 onClick = {
                                     viewModel.removeItemFromList(item)
@@ -198,7 +206,10 @@ class MainActivity : ComponentActivity() {
                     // Items использован что бы задать composable скоуп и иметь возможность добавить изображение emptyState'а.
                     items(arrayListOf("")) {
                         Column(
-                            modifier = Modifier.fillMaxSize()/*.border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(16.dp))*/.padding(all = 20.dp)
+                            modifier = Modifier
+                                .fillMaxSize()/*.border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(16.dp))*/.padding(
+                                all = 20.dp
+                            )
                         ) {
                             Image(painter = painterResource(id = R.drawable.emptystate2),
                                 contentDescription = "EmptyState",
@@ -217,8 +228,10 @@ class MainActivity : ComponentActivity() {
 
             Column(
                 modifier = Modifier
+                    .animateContentSize()
                     .padding(all = 10.dp)
-                    .fillMaxSize()
+                    /*.weight(1f)*/
+                    // .fillMaxSize()
                     .border(
                         width = 1.dp,
                         color = Color.Black,
@@ -230,16 +243,18 @@ class MainActivity : ComponentActivity() {
                     )
                     .padding(all = 20.dp)
 
+
+
             ) {
                 Text(
-                    text = "Add new context",
+                    text = "Add new contact",
                     modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
                     fontWeight = FontWeight.Bold
                     )
                 // Интересно чего это метод onChangeNameValue не работает когда написан универсально, но работает когда написано 3 отдельных метода. по любому есть решение.
                 // А еще надо текст ошибки разтиражировать с 1 до 3 (на 3 поля вместо 1) и вставлять когда и где надо.
                 OutlinedTextField(
-                    value = state.value.name,
+                    value = state.name,
                     onValueChange = {
                         name -> viewModel.onChangeNameFieldValue(name)
                         viewModel.clearErrorText()
@@ -251,9 +266,9 @@ class MainActivity : ComponentActivity() {
                         .fillMaxWidth(),
                     label = { Text(stringResource(R.string.Add_contact_name_field_label)) },
                     supportingText = {
-                        if (state.value.isNameEmpty) {
+                        if (state.name.isEmpty()) {
                             Text(
-                                text = state.value.errorText,
+                                text = state.errorText ?: "",
                                 color = Color.Red
                             )
                         }
@@ -261,7 +276,7 @@ class MainActivity : ComponentActivity() {
                 )
 
                 OutlinedTextField(
-                    value = state.value.surName,
+                    value = state.surName,
                     onValueChange = {
                         surName -> viewModel.onChangeSurnameValue(surName)
                         viewModel.clearErrorText()
@@ -272,9 +287,9 @@ class MainActivity : ComponentActivity() {
                         .fillMaxWidth(),
                     label = { Text(stringResource(R.string.Add_contact_surname_field_label)) },
                     supportingText = {
-                        if (state.value.isSurNameEmpty) {
+                        if (state.surName.isEmpty()) {
                             Text(
-                                text = state.value.errorText,
+                                text = state.errorText ?: "",
                                 color = Color.Red
                             )
                         }
@@ -282,7 +297,7 @@ class MainActivity : ComponentActivity() {
                 )
 
                 OutlinedTextField(
-                    value = state.value.number,
+                    value = state.number,
                     onValueChange = { number -> viewModel.onChangeNumberValue(number)
                         viewModel.clearErrorText()
                     },
@@ -292,9 +307,9 @@ class MainActivity : ComponentActivity() {
                         .fillMaxWidth(),
                     label = { Text(stringResource(R.string.Add_contact_number_field_label)) },
                     supportingText = {
-                        if (state.value.isNumberEmpty) {
+                        if (state.number.isEmpty()) {
                             Text(
-                                text = state.value.errorText,
+                                text = state.errorText ?: "",
                                 color = Color.Red
                             )
                         }
@@ -303,7 +318,9 @@ class MainActivity : ComponentActivity() {
 
                 val text = stringResource(R.string.emty_name_field_error)
                 Button(
-                    modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
+                    modifier = Modifier
+                        .imePadding()
+                        .align(alignment = Alignment.CenterHorizontally),
                     onClick = { viewModel.addItemToList(emptyStateStringResource = text) }
                 ) { Text(stringResource(R.string.add_contact_button_text)) }
 
@@ -315,10 +332,8 @@ class MainActivity : ComponentActivity() {
     @Preview(showBackground = true)
     @Composable
     fun ContactList() {
-        Scaffold {
             SimpleContactListTheme {
                 MainScreen()
             }
-        }
     }
 }

@@ -24,18 +24,17 @@ class MyViewModel(
      *  Вроде (не точно) эти классы реализуют Observer.
      */
 
-    private val _state: MutableStateFlow<ListState> =  MutableStateFlow(ListState.default())
+    private val _state: MutableStateFlow<ListState> = MutableStateFlow(ListState())
     /** Это состояние, на которое мы будем подписываться внутри нашей Activity
     (а именно - нашей composable функции).*/
-    val state: StateFlow<ListState> =  _state.asStateFlow()
+    val state: StateFlow<ListState> = _state.asStateFlow()
 
     // Название метода - караул.
     fun onChangeNameFieldValue(text: String) {
         _state.update { currentState ->
             currentState.copy(
                 name = text,
-                errorText = "",
-                isNameEmpty = text.isEmpty()
+                errorText = null
             )
         }
     }
@@ -44,8 +43,7 @@ class MyViewModel(
         _state.update { currentState ->
             currentState.copy(
                 surName = text,
-                errorText = "",
-                isSurNameEmpty = text.isEmpty()
+                errorText = null
             )
         }
     }
@@ -54,8 +52,7 @@ class MyViewModel(
         _state.update { currentState ->
             currentState.copy(
                 number = text,
-                errorText = "",
-                isNumberEmpty = text.isEmpty()
+                errorText = null
             )
         }
     }
@@ -73,7 +70,11 @@ class MyViewModel(
                     ),
                     name = "",
                     surName = "",
-                    number = ""
+                    number = "",
+                    /*isNameEmpty = true,
+                    isNumberEmpty = true,
+                    isSurNameEmpty = true,*/
+                    errorText = null
                 )
             }
         } // Ниже какая-то двойная обработка условий. Я и так проверяю на пустоту все строки отдельно, а тут еще и дополнительно проверка всех троих сразу.
@@ -105,7 +106,7 @@ class MyViewModel(
     }
 
     fun clearErrorText() {
-        _state.update { it.copy(errorText = "") }
+        _state.update { it.copy(errorText = null) }
     }
 
     /** Сам метод (как и stringResourcesProvider) здесь существуют исключительно в учебных целях.
