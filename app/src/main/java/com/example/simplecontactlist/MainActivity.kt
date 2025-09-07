@@ -1,9 +1,12 @@
 package com.example.simplecontactlist
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.os.Bundle
+import android.view.WindowInsets.Type.ime
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -11,7 +14,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,15 +21,16 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -45,6 +48,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.simplecontactlist.ui.theme.SimpleContactListTheme
@@ -72,6 +76,7 @@ class MainActivity : ComponentActivity() {
     private val vmFactory = MyViewModelFactory(StringResourcesProvider(this))
     private lateinit var viewModel: MyViewModel
 
+    @RequiresApi(Build.VERSION_CODES.R)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,46 +87,37 @@ class MainActivity : ComponentActivity() {
         setContent {
             SimpleContactListTheme {
                 // enableEdgeToEdge()
-
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    contentWindowInsets = WindowInsets(0,0,0,0)
-                ) { innerPadding ->
-                    MainScreen(Modifier
-                        .fillMaxSize()
-                        .padding())
-                    // Почему если оформить кнопку в отдельную Compose функцию, то она появляется не под списком, а в самом верху? Можно ли добиться такого что бы элементы экрана были в отдельных композициях, но располагались в порядке вызова функций?
-                    // AddContactButton()
-                }
+                        // .imeNestedScroll() - прикольная штука, позволяет жестом вызывать клаву.
+                    contentWindowInsets = WindowInsets(0,0,0,10000)
+                ) { innerPadding -> MainScreen(Modifier.fillMaxSize().padding()) }
             }
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.R)
     @Composable
-    fun MainScreen(modifier: Modifier = Modifier) {
+    fun MainScreen(modifier: Modifier = Modifier.verticalScroll(rememberScrollState())) {
         // 1. Преобразует StateFlow (тип из корутин) в State (тип из compose)
         // 2. Здесь происходит подписка на StateFlow. То есть мы можем следить за измеенениями нашего state.
+        // Вот такой момент с двумя переменными мне не нравится. Он экономит много раз обращение к value, но выглядит всратенько.
+        // val localWindowInsets: LocalWindowInsets = LocalWindowInsets()
         val state: State<ListState> = viewModel.state.collectAsStateWithLifecycle()
         val listState: ListState = state.value
         ContactsList(modifier, listState)
     }
 
-    @OptIn(ExperimentalLayoutApi::class)
+    @RequiresApi(Build.VERSION_CODES.R)
     @Composable
     fun ContactsList(modifier: Modifier = Modifier, state: ListState) {
-        // А как обрабатывать смену состояния? Типа, экран перевернул?
-        // из за этого (эти двое расположено внутри активити) у нас затирается состояние. Так не надо. Нужно придумать как создать вьюмодель и listState так что бы и состояние хранилось, и все остальное работало.
-        // val listState = remember { ListState(ListState.default()) } - теперь эта строка не нужна, потому что состояние теперь мы храним во вьюмодели (переменная state).
-        // Вот тут беда. Надо будет разобраться с тем что такое WindowInsets. Я не могу это включить в импорты проекта, но на гугл девелоперс это есть. Надо разбираться. Нейросеть упорно говорит что нам туда. https://developer.android.com/reference/kotlin/androidx/compose/foundation/layout/WindowInsets
-        // val rootView = LocalView.current
-        // val keyboardHeight = remember {         WindowInsetsAnimationController(WindowInsetsType.ime())
-        
         Column(
-            modifier = modifier,
+            modifier = modifier
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = ime().dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LazyColumn(
-                contentPadding = PaddingValues(all = 0.dp),
                 state = rememberLazyListState(),
                 modifier = Modifier
                     .padding(
@@ -153,40 +149,32 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .padding(start = 12.dp, end = 12.dp, top = 10.dp)
                                 .fillMaxWidth()
-                                .background(color = Color.White, shape = RoundedCornerShape(5.dp))
-                                .border(
-                                    width = 1.dp,
-                                    color = Color.Black,
-                                    shape = RoundedCornerShape(5.dp)
-                                )
+                                .background(color = Color.White, shape = RoundedCornerShape(5.dp)),
                         ) {
                             Box(
                                 modifier = Modifier
+                                    .align(Alignment.CenterVertically)
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(
-                                        color = color
-                                    )
-                                    .padding(top = 15.dp)
+                                    .background(color = color),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = item.name.getOrNull(0).toString(),
                                     color = Color.White,
-                                    modifier = Modifier.align(alignment = Alignment.Center)
+                                    modifier = Modifier.align(Alignment.Center),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
-                            Spacer(modifier = Modifier.width(50.dp))
-                            Column(modifier = Modifier.width(200.dp)) {
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(modifier = Modifier.width(250.dp)) {
                                 Text(text = "${item.name} ${item.surname}")
                                 Text(text = item.number)
                             }
-
-                            Spacer(modifier = Modifier/*.weight(0.1f)*/)
                             Button(
-                                onClick = {
-                                    viewModel.removeItemFromList(item)
-                                },
-                                modifier = Modifier.padding(end = 10.dp),
+                                onClick = { viewModel.removeItemFromList(item) },
+                                modifier = Modifier,
                                 shape = MaterialTheme.shapes.extraSmall,
                                 contentPadding = PaddingValues(
                                     start = 2.dp,
@@ -194,9 +182,7 @@ class MainActivity : ComponentActivity() {
                                     end = 2.dp,
                                     bottom = 2.dp
                                 )
-                            ) {
-                                Text(stringResource(R.string.delete_button_text))
-                            }
+                            ) { Text(stringResource(R.string.delete_button_text)) }
                         }
                     }
                 }
@@ -206,17 +192,15 @@ class MainActivity : ComponentActivity() {
                     // Items использован что бы задать composable скоуп и иметь возможность добавить изображение emptyState'а.
                     items(arrayListOf("")) {
                         Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
-                                .fillMaxSize()/*.border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(16.dp))*/.padding(
-                                all = 20.dp
-                            )
+                                // Вариант с хардкодным паддингом от верха - не нравится. Неужели нельзя задать что бы изображение было отцентровано и по вертикали, и по горизонтали?
+                                .padding( all = 50.dp)
                         ) {
-                            Image(painter = painterResource(id = R.drawable.emptystate2),
+                            Image(
+                                painter = painterResource(id = R.drawable.emptystate2),
                                 contentDescription = "EmptyState",
-                                modifier = Modifier
-                                    .size(170.dp)
-                                    .clip(CircleShape)
-                                    .align(alignment = Alignment.CenterHorizontally)
+                                modifier = Modifier.size(170.dp).clip(CircleShape),
                             )
                             Text(
                                 text = stringResource(R.string.empty_state_text),
@@ -229,9 +213,8 @@ class MainActivity : ComponentActivity() {
             Column(
                 modifier = Modifier
                     .animateContentSize()
-                    .padding(all = 10.dp)
-                    /*.weight(1f)*/
-                    // .fillMaxSize()
+                    .padding(top = 10.dp, start = 10.dp, end = 10.dp)
+                    // .weight(0f) - "убивает" скроллабельность всего головного контейнера.
                     .border(
                         width = 1.dp,
                         color = Color.Black,
@@ -242,23 +225,17 @@ class MainActivity : ComponentActivity() {
                         shape = RoundedCornerShape(16.dp)
                     )
                     .padding(all = 20.dp)
-
-
-
             ) {
                 Text(
                     text = "Add new contact",
                     modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
                     fontWeight = FontWeight.Bold
                     )
-                // Интересно чего это метод onChangeNameValue не работает когда написан универсально, но работает когда написано 3 отдельных метода. по любому есть решение.
-                // А еще надо текст ошибки разтиражировать с 1 до 3 (на 3 поля вместо 1) и вставлять когда и где надо.
                 OutlinedTextField(
                     value = state.name,
                     onValueChange = {
                         name -> viewModel.onChangeNameFieldValue(name)
                         viewModel.clearErrorText()
-
                     },
                     modifier = Modifier
                         .width(250.dp)
@@ -319,7 +296,6 @@ class MainActivity : ComponentActivity() {
                 val text = stringResource(R.string.emty_name_field_error)
                 Button(
                     modifier = Modifier
-                        .imePadding()
                         .align(alignment = Alignment.CenterHorizontally),
                     onClick = { viewModel.addItemToList(emptyStateStringResource = text) }
                 ) { Text(stringResource(R.string.add_contact_button_text)) }
@@ -328,12 +304,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.R)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Preview(showBackground = true)
     @Composable
     fun ContactList() {
-            SimpleContactListTheme {
-                MainScreen()
-            }
+        SimpleContactListTheme {
+            MainScreen()
+        }
     }
 }
