@@ -249,7 +249,8 @@ class MainActivity : ComponentActivity() {
                                 color = Color.Red
                             )
                         }
-                    }
+                    },
+                    maxLines = 3
                 )
 
                 OutlinedTextField(
@@ -270,7 +271,8 @@ class MainActivity : ComponentActivity() {
                                 color = Color.Red
                             )
                         }
-                    }
+                    },
+                    maxLines = 3
                 )
 
                 OutlinedTextField(
@@ -291,6 +293,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     },
+                    maxLines = 3
                 )
 
                 val text = stringResource(R.string.emty_name_field_error)
