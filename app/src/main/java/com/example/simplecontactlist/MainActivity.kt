@@ -14,6 +14,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imeNestedScroll
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -76,6 +79,7 @@ class MainActivity : ComponentActivity() {
     private val vmFactory = MyViewModelFactory(StringResourcesProvider(this))
     private lateinit var viewModel: MyViewModel
 
+    @OptIn(ExperimentalLayoutApi::class)
     @RequiresApi(Build.VERSION_CODES.R)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,10 +90,8 @@ class MainActivity : ComponentActivity() {
         ).get(MyViewModel::class.java)
         setContent {
             SimpleContactListTheme {
-                // enableEdgeToEdge()
                 Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                        // .imeNestedScroll() - прикольная штука, позволяет жестом вызывать клаву.
+                    modifier = Modifier.fillMaxSize().imeNestedScroll(),
                     contentWindowInsets = WindowInsets(0,0,0,10000)
                 ) { innerPadding -> MainScreen(Modifier.fillMaxSize().padding()) }
             }
@@ -98,7 +100,7 @@ class MainActivity : ComponentActivity() {
 
     @RequiresApi(Build.VERSION_CODES.R)
     @Composable
-    fun MainScreen(modifier: Modifier = Modifier.verticalScroll(rememberScrollState())) {
+    fun MainScreen(modifier: Modifier = Modifier.imePadding().verticalScroll(rememberScrollState())) {
         // 1. Преобразует StateFlow (тип из корутин) в State (тип из compose)
         // 2. Здесь происходит подписка на StateFlow. То есть мы можем следить за измеенениями нашего state.
         // Вот такой момент с двумя переменными мне не нравится. Он экономит много раз обращение к value, но выглядит всратенько.
@@ -250,7 +252,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     },
-                    maxLines = 3
+                    maxLines = 1
                 )
 
                 OutlinedTextField(
@@ -272,7 +274,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     },
-                    maxLines = 3
+                    maxLines = 1
                 )
 
                 OutlinedTextField(
@@ -293,7 +295,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     },
-                    maxLines = 3
+                    maxLines = 1
                 )
 
                 val text = stringResource(R.string.emty_name_field_error)
