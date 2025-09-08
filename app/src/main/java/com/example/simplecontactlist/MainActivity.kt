@@ -58,24 +58,6 @@ import com.example.simplecontactlist.ui.theme.SimpleContactListTheme
 import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
-    /** Немного истории по работе над ViewModel.
-     * Вот так это было по старому:
-     * private val viewModel = MyViewModel(stringResourcesProvider = StringResourcesProvider(this))
-     * - не будет работать в случае переворота экрана, потому что это кастомный конструктор и он
-     * инстанциируетсся при пересоздании активити и данные затираются.
-     * Затем был найден другой вариант:
-     * private val viewModel: MyViewModel by viewModels() Поворот экрана заработал, данные не перезатираются.
-     * Но ТАК это работает только в случае если во Вьюмодель не надо передавать аргументы.
-     * И тогда стал вопрос - как сделать так что б и аргументы во ViewModel можно было передавать,
-     * и она не умирала с пересозданием Activity. Тогда я узнал что можно
-     * использовать ViewModelProvider.Factory - провайдер, в который надо передать фабрику по созданию
-     * вьюмоделей. И тогда можно вне активити создать фабрику, сделать lateinit вьюмодель,
-     * а потом вьюмодель проинициализировать в активити. и вот эта конструкция будет хранить состояния не умирая при пересоздании активности.
-     *
-     * Задача со звёздочкой: написать свой делегат для получения кастомизируемых ViewModel. Когда-нибудь.
-     */
-
-
     private val vmFactory = MyViewModelFactory(StringResourcesProvider(this))
     private lateinit var viewModel: MyViewModel
 
@@ -103,13 +85,10 @@ class MainActivity : ComponentActivity() {
 
     @RequiresApi(Build.VERSION_CODES.R)
     @Composable
-    fun MainScreen(modifier: Modifier = Modifier
-        .imePadding()
-        .verticalScroll(rememberScrollState())) {
-        // 1. Преобразует StateFlow (тип из корутин) в State (тип из compose)
-        // 2. Здесь происходит подписка на StateFlow. То есть мы можем следить за измеенениями нашего state.
-        // Вот такой момент с двумя переменными мне не нравится. Он экономит много раз обращение к value, но выглядит всратенько.
-        // val localWindowInsets: LocalWindowInsets = LocalWindowInsets()
+    fun MainScreen(
+        modifier: Modifier = Modifier
+    ) {
+
         val state: State<ListState> = viewModel.state.collectAsStateWithLifecycle()
         val listState: ListState = state.value
         ContactsList(modifier, listState)
@@ -193,16 +172,11 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                // Такой вариант - очень плохой, кмк. Как это обойти? Проблема с композабл скоупом.
-                // Вопрос: можно ли менять параметры модифаера композ функции на ходу, вне модифаера? Например, хочу что б в if был lazy column в рамке, а в else - без рамки.
                 else {
-                    // Items использован что бы задать composable скоуп и иметь возможность добавить изображение emptyState'а.
                     items(arrayListOf("")) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                // Вариант с хардкодным паддингом от верха - не нравится. Неужели нельзя задать что бы изображение было отцентровано и по вертикали, и по горизонтали?
-                                .padding( all = 50.dp)
+                            modifier = Modifier.padding(all = 50.dp)
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.emptystate2),
@@ -223,7 +197,6 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier
                     .animateContentSize()
                     .padding(top = 10.dp, start = 10.dp, end = 10.dp)
-                    // .weight(0f) - "убивает" скроллабельность всего головного контейнера.
                     .border(
                         width = 1.dp,
                         color = Color.Black,
@@ -239,7 +212,7 @@ class MainActivity : ComponentActivity() {
                     text = "Add new contact",
                     modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
                     fontWeight = FontWeight.Bold
-                    )
+                )
                 OutlinedTextField(
                     value = state.name,
                     onValueChange = {
