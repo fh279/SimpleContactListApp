@@ -91,16 +91,21 @@ class MainActivity : ComponentActivity() {
         setContent {
             SimpleContactListTheme {
                 Scaffold(
-                    modifier = Modifier.fillMaxSize().imeNestedScroll(),
-                    contentWindowInsets = WindowInsets(0,0,0,10000)
-                ) { innerPadding -> MainScreen(Modifier.fillMaxSize().padding()) }
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .imeNestedScroll()
+                ) { innerPadding -> MainScreen(Modifier
+                    .fillMaxSize()
+                    .padding()) }
             }
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
     @Composable
-    fun MainScreen(modifier: Modifier = Modifier.imePadding().verticalScroll(rememberScrollState())) {
+    fun MainScreen(modifier: Modifier = Modifier
+        .imePadding()
+        .verticalScroll(rememberScrollState())) {
         // 1. Преобразует StateFlow (тип из корутин) в State (тип из compose)
         // 2. Здесь происходит подписка на StateFlow. То есть мы можем следить за измеенениями нашего state.
         // Вот такой момент с двумя переменными мне не нравится. Он экономит много раз обращение к value, но выглядит всратенько.
@@ -202,7 +207,9 @@ class MainActivity : ComponentActivity() {
                             Image(
                                 painter = painterResource(id = R.drawable.emptystate2),
                                 contentDescription = "EmptyState",
-                                modifier = Modifier.size(170.dp).clip(CircleShape),
+                                modifier = Modifier
+                                    .size(170.dp)
+                                    .clip(CircleShape),
                             )
                             Text(
                                 text = stringResource(R.string.empty_state_text),
