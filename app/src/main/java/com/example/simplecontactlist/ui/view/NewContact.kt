@@ -18,7 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.simplecontactlist.ListState
-import com.example.simplecontactlist.MyViewModel
+import com.example.simplecontactlist.viewModel.MyViewModel
 import com.example.simplecontactlist.R
 
 @Composable

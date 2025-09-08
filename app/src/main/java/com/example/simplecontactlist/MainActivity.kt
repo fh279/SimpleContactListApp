@@ -28,6 +28,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.simplecontactlist.ui.theme.SimpleContactListTheme
 import com.example.simplecontactlist.ui.view.AddContact
 import com.example.simplecontactlist.ui.view.ContactList
+import com.example.simplecontactlist.viewModel.MyViewModel
+import com.example.simplecontactlist.viewModel.MyViewModelFactory
 
 class MainActivity : ComponentActivity() {
     private val vmFactory = MyViewModelFactory(StringResourcesProvider(this))

@@ -37,7 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.simplecontactlist.ListState
-import com.example.simplecontactlist.MyViewModel
+import com.example.simplecontactlist.viewModel.MyViewModel
 import com.example.simplecontactlist.R
 import kotlin.random.Random
 

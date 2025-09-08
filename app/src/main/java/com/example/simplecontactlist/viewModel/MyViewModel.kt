@@ -1,12 +1,16 @@
-package com.example.simplecontactlist
+package com.example.simplecontactlist.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.simplecontactlist.ListItem
+import com.example.simplecontactlist.ListState
+import com.example.simplecontactlist.StringResourcesProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.UUID
+import kotlin.collections.plus
 
 class MyViewModel(private val stringResourcesProvider: StringResourcesProvider) : ViewModel() {
     private val _state: MutableStateFlow<ListState> = MutableStateFlow(ListState())
